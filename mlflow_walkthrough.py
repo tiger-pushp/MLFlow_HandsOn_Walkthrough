@@ -1,38 +1,36 @@
 import mlflow
 import mlflow.sklearn
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error
+from sklearn.linear_model import LinearRegression
+from sklearn.datasets import make_regression
 from sklearn.model_selection import train_test_split
-from sklearn.datasets import load_diabetes
+from sklearn.metrics import mean_squared_error
 
-# Load data
-data = load_diabetes()
-X = data.data
-y = data.target
+# Create a simple regression dataset
+X, y = make_regression(n_samples=100, n_features=5, noise=0.1)
 
-# Split into train and test
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Split dataset into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
-# Start an MLFlow experiment
-mlflow.set_experiment("MLFlow Walkthrough")
-
+# Start an MLFlow run
 with mlflow.start_run():
-    # Train a RandomForest model
-    params = {"n_estimators": 100, "max_depth": 5, "random_state": 42}
-    model = RandomForestRegressor(**params)
+
+    # Log parameters (for example, model hyperparameters)
+    mlflow.log_param("model_type", "LinearRegression")
+    mlflow.log_param("test_size", 0.2)
+
+    # Train a model
+    model = LinearRegression()
     model.fit(X_train, y_train)
 
-    # Log parameters
-    mlflow.log_param("n_estimators", params["n_estimators"])
-    mlflow.log_param("max_depth", params["max_depth"])
+    # Make predictions
+    y_pred = model.predict(X_test)
 
-    # Make predictions and log metrics
-    predictions = model.predict(X_test)
-    mse = mean_squared_error(y_test, predictions)
-    mlflow.log_metric("mse", mse)
+    # Calculate metrics and log them
+    mse = mean_squared_error(y_test, y_pred)
+    mlflow.log_metric("mean_squared_error", mse)
 
     # Log the model
-    mlflow.sklearn.log_model(model, "random_forest_model")
+    mlflow.sklearn.log_model(model, "model")
 
-    print(f"Model logged with MSE: {mse}")
+    print(f"Logged model with MSE: {mse}")
 
